@@ -11,12 +11,30 @@ namespace Management.Services.AuthAPI.Services
         private readonly AppDbContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        public AuthService(AppDbContext db,UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager) 
+        private readonly IJwtTokenGenerator _jwtTokenGenerator;
+        public AuthService(AppDbContext db,UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager,IJwtTokenGenerator jwtTokenGenerator) 
         {
             _db = db;
+            _jwtTokenGenerator = jwtTokenGenerator;
             _userManager = userManager;
             _roleManager = roleManager;
         }
+
+        public async Task<bool> AssignRole(string email, string roleName)
+        {
+            var user = _db.ApplicationUsers.FirstOrDefault(db => db.UserName.ToLower() == email.ToLower());
+            if (user != null)
+            {
+                if (!_roleManager.RoleExistsAsync(roleName).GetAwaiter().GetResult())
+                {
+                    _roleManager.CreateAsync(new IdentityRole(roleName)).GetAwaiter().GetResult();
+                }
+                await _userManager.AddToRoleAsync(user, roleName);
+                return true;
+            }
+            return false;
+        }
+
         public async Task<LoginResponseDto> Login(LoginRequestDto requestDto)
         {
             var user =_db.ApplicationUsers.FirstOrDefault(db=>db.UserName.ToLower()== requestDto.UserName.ToLower());
@@ -32,6 +50,8 @@ namespace Management.Services.AuthAPI.Services
             }
             //if user is found, generate Token
 
+            var token = _jwtTokenGenerator.GenerateToken(user);
+
             UserDto userDto = new()
             {
                 Email = user.Email,
@@ -42,7 +62,7 @@ namespace Management.Services.AuthAPI.Services
             LoginResponseDto loginResponseDto = new LoginResponseDto()
             {
                 User = userDto,
-                Token = ""
+                Token = token
             };
             return loginResponseDto;
 

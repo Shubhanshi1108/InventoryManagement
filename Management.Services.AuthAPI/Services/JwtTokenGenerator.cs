@@ -1,5 +1,6 @@
 ﻿using Management.Services.AuthAPI.Model;
 using Management.Services.AuthAPI.Services.IService;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -10,15 +11,16 @@ namespace Management.Services.AuthAPI.Services
     public class JwtTokenGenerator : IJwtTokenGenerator
     {
         private readonly JwtOptions _jwtOptions;
-        public JwtTokenGenerator(JwtOptions jwtOptions)
+        public JwtTokenGenerator(IOptions<JwtOptions> jwtOptions)
         {
-            _jwtOptions = jwtOptions;
+            _jwtOptions = jwtOptions.Value;
         }
         public string GenerateToken(ApplicationUser applicationUser)
         {
+            //JwtSecurityTokenHandler class provides functionality for creating and validating JWT tokens.
             var tokenHandler = new JwtSecurityTokenHandler();
-
-            var key= Encoding.ASCII.GetBytes(_jwtOptions.Secret);
+            //convert the secret key string into a byte array.
+            var key = Encoding.ASCII.GetBytes(_jwtOptions.Secret);
 
             var claimList = new List<Claim> {
                 new Claim(JwtRegisteredClaimNames.Email,applicationUser.Email),
