@@ -3,10 +3,13 @@ using Management.Web.Service.IService;
 using Management.Web.Utility;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace Management.Web.Controllers
 {
@@ -79,6 +82,9 @@ namespace Management.Web.Controllers
             if (responseDto != null && responseDto.IsSuccess)
             {
                 LoginResponseDto loginResponseDto= JsonConvert.DeserializeObject<LoginResponseDto>(Convert.ToString(responseDto.Result));
+                
+                await SignInUser(loginResponseDto);
+                _tokenProvider.SetToken(loginResponseDto.Token);
                 TempData["success"] = "Login Successful";
                 return RedirectToAction("Index","Home");
 
@@ -88,6 +94,29 @@ namespace Management.Web.Controllers
                 ModelState.AddModelError("CustomError", responseDto.Message);
                 return View(loginRequestDto);
             }
+        }
+
+        private async Task SignInUser(LoginResponseDto model)
+        {
+            //JwtSecurityTokenHandler class is used to read the JWT token and extract its contents.
+            var handler = new JwtSecurityTokenHandler();
+
+            var jwt=handler.ReadJwtToken(model.Token);
+
+            //parameter specifies the authentication scheme used for cookie-based authentication.
+            var identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
+            identity.AddClaim(new Claim(JwtRegisteredClaimNames.Email,
+                jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Email).Value));
+            identity.AddClaim(new Claim(JwtRegisteredClaimNames.Sub,
+                jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Sub).Value)); 
+            identity.AddClaim(new Claim(JwtRegisteredClaimNames.Name,
+                jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Name).Value));
+            
+            identity.AddClaim(new Claim(ClaimTypes.Name,
+                jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Email).Value));
+
+            var principle = new ClaimsPrincipal(identity);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principle);
         }
 
        

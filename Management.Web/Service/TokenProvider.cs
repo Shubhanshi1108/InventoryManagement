@@ -25,6 +25,7 @@ namespace Management.Web.Service
 
         public void SetToken(string token)
         {
+            //to set the token value in cookie so that other API can access it 
             _contextAccessor.HttpContext?.Response.Cookies.Append(StaticDetails.TokenCookie, token);
         }
     }
