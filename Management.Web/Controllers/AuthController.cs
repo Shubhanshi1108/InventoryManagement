@@ -1,6 +1,8 @@
 ﻿using Management.Web.Models;
 using Management.Web.Service.IService;
 using Management.Web.Utility;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -11,10 +13,12 @@ namespace Management.Web.Controllers
     public class AuthController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly ITokenProvider _tokenProvider;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ITokenProvider tokenProvider)
         {
             _authService = authService;
+            _tokenProvider = tokenProvider;
         }
 
         [HttpGet]
@@ -85,5 +89,7 @@ namespace Management.Web.Controllers
                 return View(loginRequestDto);
             }
         }
+
+       
     }
 }

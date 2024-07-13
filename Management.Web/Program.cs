@@ -11,6 +11,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<ICouponService,CouponService>();
 builder.Services.AddHttpClient<IAuthService,AuthService>();
+builder.Services.AddHttpClient<ITokenProvider,TokenProvider>();
 
 StaticDetails.CouponAPIBase = builder.Configuration["ServiceUrls:CouponApi"];
 StaticDetails.AuthApiBase = builder.Configuration["ServiceUrls:AuthApi"];
@@ -18,6 +19,7 @@ StaticDetails.AuthApiBase = builder.Configuration["ServiceUrls:AuthApi"];
 builder.Services.AddScoped<IBaseService, BaseService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenProvider,TokenProvider>();
 
 var app = builder.Build();
 
